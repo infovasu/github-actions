@@ -1,7 +1,7 @@
 name: Setup EC2 and Install Software
 
 on:
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:  #Allows manual trigger
 
 jobs:
   setup-ec2:
