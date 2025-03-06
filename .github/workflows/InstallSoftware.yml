@@ -46,8 +46,6 @@ jobs:
               wget https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.46.v20220331/jetty-distribution-9.4.46.v20220331.tar.gz -O /tmp/jetty.tar.gz
               sudo tar -xzvf /tmp/jetty.tar.gz -C /opt/
               sudo mv /opt/jetty-distribution-9.4.46.v20220331 /opt/jetty
-              sudo scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no src/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
-              ls -ltr /opt/jetty/webapps/
             fi
 
             # Install ActiveMQ if not already installed
@@ -58,6 +56,8 @@ jobs:
             fi    
             
             # Optionally, start Jetty and ActiveMQ if required:
+            sudo scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no src/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
+            ls -ltr /opt/jetty/webapps/            
             sudo /opt/jetty/bin/jetty.sh restart
             sudo /opt/activemq/bin/activemq start 
           EOF
