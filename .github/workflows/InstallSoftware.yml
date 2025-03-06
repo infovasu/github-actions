@@ -1,7 +1,9 @@
 name: Setup EC2 and Install Software
 
 on:
-  workflow_dispatch:  #Allows manual trigger
+  push:
+    branches:
+      - main
 
 jobs:
   setup-ec2:
