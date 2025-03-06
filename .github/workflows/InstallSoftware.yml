@@ -1,7 +1,7 @@
 name: Setup EC2 and Install Software
 
 on:
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   setup-ec2:
@@ -20,9 +20,9 @@ jobs:
 
     - name: Install Maven and JDK on EC2
       run: |
-        ssh -i ~/.ssh/ec2_key ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          set -e  # Exit immediately if a command fails
-          
+        ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          set -e  # Exit on failure
+
           # Update the package lists
           echo "Updating system packages..."
           sudo yum update -y || sudo apt update -y
@@ -36,6 +36,6 @@ jobs:
           echo "Installing Maven..."
           sudo yum install -y maven || sudo apt install -y maven
           mvn -version
-          
+
           echo "Maven and JDK installation completed!"
         EOF
