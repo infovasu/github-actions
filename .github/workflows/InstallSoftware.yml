@@ -19,45 +19,40 @@ jobs:
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/ec2_key
           chmod 600 ~/.ssh/ec2_key
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Install Maven and JDK on EC2
+      - name: Install JDK, Maven, and Jetty on EC2
         run: |
-          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no  ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          sudo scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no src/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
-          ls -ltr /opt/jetty/webapps/          
+          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e  # Exit on failure
-
-            # Update the package lists
             echo "Updating system packages..."
             sudo yum update -y || sudo apt update -y
-
-            # Install JDK (OpenJDK 17)
-            echo "Installing JDK..."
-            sudo yum install -y java-17-amazon-corretto || sudo apt install -y openjdk-17-jdk
+            # Install JDK if not installed
+            if ! java -version &>/dev/null; then
+              echo "Installing JDK..."
+              sudo yum install -y java-17-amazon-corretto || sudo apt install -y openjdk-17-jdk
+            fi
             java -version
-
-            # Install Maven
-            echo "Installing Maven..."
-            sudo yum install -y maven || sudo apt install -y maven
+            # Install Maven if not installed
+            if ! mvn -version &>/dev/null; then
+              echo "Installing Maven..."
+              sudo yum install -y maven || sudo apt install -y maven
+            fi
             mvn -version
-
-            echo "Maven and JDK installation completed!"
-
-            # Install Jetty 9.4.46 if not already installed
-            if [ ! -d /opt/jetty ]; then
+            # Install Jetty 9.4.46 if not installed
+            if [ ! -d /opt/jetty ] || [ ! -f /opt/jetty/bin/jetty.sh ]; then
+              echo "Installing Jetty..."
               wget https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.46.v20220331/jetty-distribution-9.4.46.v20220331.tar.gz -O /tmp/jetty.tar.gz
               sudo tar -xzvf /tmp/jetty.tar.gz -C /opt/
               sudo mv /opt/jetty-distribution-9.4.46.v20220331 /opt/jetty
+              sudo chmod -R 755 /opt/jetty
             fi
-
-            # Install ActiveMQ if not already installed
-            if [ ! -d /opt/activemq ]; then
-              wget https://archive.apache.org/dist/activemq/5.16.3/apache-activemq-5.16.3-bin.tar.gz -O /tmp/activemq.tar.gz
-              sudo tar -xzvf /tmp/activemq.tar.gz -C /opt/
-              sudo mv /opt/apache-activemq-5.16.3 /opt/activemq
-            fi    
-            
-            # Optionally, start Jetty and ActiveMQ if required:         
+            echo "Jetty installed successfully."
+          EOF
+      - name: Deploy WAR to EC2
+        run: |
+          echo "Deploying WAR file...."
+          scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no src/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
+          
+          ssh -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "Restarting Jetty..."
             sudo /opt/jetty/bin/jetty.sh restart
-            sudo /opt/activemq/bin/activemq start 
           EOF
