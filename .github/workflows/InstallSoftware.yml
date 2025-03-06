@@ -30,34 +30,34 @@ jobs:
           sudo yum update -y || sudo apt update -y
 
           # Install JDK (OpenJDK 17)
-          echo "Installing JDK..."
-          sudo yum install -y java-17-amazon-corretto || sudo apt install -y openjdk-17-jdk
+          #echo "Installing JDK..."
+          #sudo yum install -y java-17-amazon-corretto || sudo apt install -y openjdk-17-jdk
           java -version
 
           # Install Maven
-          echo "Installing Maven..."
-          sudo yum install -y maven || sudo apt install -y maven
+          #echo "Installing Maven..."
+          #sudo yum install -y maven || sudo apt install -y maven
           mvn -version
 
-          echo "Maven and JDK installation completed!"
+          #echo "Maven and JDK installation completed!"
 
           # Install Jetty 9.4.46 if not already installed
-          if [ ! -d /opt/jetty ]; then
-            wget https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.46.v20220331/jetty-distribution-9.4.46.v20220331.tar.gz -O /tmp/jetty.tar.gz
-            sudo tar -xzvf /tmp/jetty.tar.gz -C /opt/
-            sudo mv /opt/jetty-distribution-9.4.46.v20220331 /opt/jetty
-          fi
+          #if [ ! -d /opt/jetty ]; then
+          #  wget https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-distribution/9.4.46.v20220331/jetty-distribution-9.4.46.v20220331.tar.gz -O /tmp/jetty.tar.gz
+          #  sudo tar -xzvf /tmp/jetty.tar.gz -C /opt/
+          #  sudo mv /opt/jetty-distribution-9.4.46.v20220331 /opt/jetty
+          #fi
 
           # Install ActiveMQ if not already installed
-          if [ ! -d /opt/activemq ]; then
-            wget https://archive.apache.org/dist/activemq/5.16.3/apache-activemq-5.16.3-bin.tar.gz -O /tmp/activemq.tar.gz
-            sudo tar -xzvf /tmp/activemq.tar.gz -C /opt/
-            sudo mv /opt/apache-activemq-5.16.3 /opt/activemq
-          fi    
+          #if [ ! -d /opt/activemq ]; then
+          #  wget https://archive.apache.org/dist/activemq/5.16.3/apache-activemq-5.16.3-bin.tar.gz -O /tmp/activemq.tar.gz
+          #  sudo tar -xzvf /tmp/activemq.tar.gz -C /opt/
+          #  sudo mv /opt/apache-activemq-5.16.3 /opt/activemq
+          #fi    
           
           # Optionally, start Jetty and ActiveMQ if required:
-          sudo /opt/jetty/bin/jetty.sh start
-          sudo /opt/activemq/bin/activemq start 
+          #sudo /opt/jetty/bin/jetty.sh start
+          #sudo /opt/activemq/bin/activemq start 
 
         - name: Copy WAR file to remote server
           uses: appleboy/scp-action@v0.1.0
