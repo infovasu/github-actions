@@ -62,8 +62,7 @@ jobs:
       
       - name: Install Maven and JDK on EC2
         run: |
-          #sudo scp -o StrictHostKeyChecking=no hol/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
-          scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no hol/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
+          sudo scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no hol/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
           sudo /opt/jetty/bin/jetty.sh restart  
             
           EOF
