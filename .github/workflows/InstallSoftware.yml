@@ -47,6 +47,7 @@ jobs:
               sudo tar -xzvf /tmp/jetty.tar.gz -C /opt/
               sudo mv /opt/jetty-distribution-9.4.46.v20220331 /opt/jetty
               sudo scp -i ~/.ssh/ec2_key -o StrictHostKeyChecking=no src/test.war ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/opt/jetty/webapps/
+              ls -ltr /opt/jetty/webapps/
             fi
 
             # Install ActiveMQ if not already installed
