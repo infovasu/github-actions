@@ -57,5 +57,18 @@ jobs:
           
           # Optionally, start Jetty and ActiveMQ if required:
           sudo /opt/jetty/bin/jetty.sh start
-          sudo /opt/activemq/bin/activemq start          
+          sudo /opt/activemq/bin/activemq start 
+
+        - name: Copy WAR file to remote server
+          uses: appleboy/scp-action@v0.1.0
+          with:
+            host: ${{ secrets.EC2_HOST }}            # Remote server address (e.g., IP or domain)
+            username: ${{ secrets.EC2_USER }}          # Remote server username
+            key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}    # Private key for SSH authentication
+            port: 22                                    # SSH port, default is 22
+            source: "hol/test.war"                    # Relative path to the WAR file in your repo
+            target: "/opt/jetty/webapps/" 
+
+          sudo /opt/jetty/bin/jetty.sh restart  
+          
         EOF
