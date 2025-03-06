@@ -1,0 +1,41 @@
+name: Setup EC2 and Install Software
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  setup-ec2:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup SSH Key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/ec2_key
+        chmod 600 ~/.ssh/ec2_key
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Install Maven and JDK on EC2
+      run: |
+        ssh -i ~/.ssh/ec2_key ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          set -e  # Exit immediately if a command fails
+          
+          # Update the package lists
+          echo "Updating system packages..."
+          sudo yum update -y || sudo apt update -y
+
+          # Install JDK (OpenJDK 17)
+          echo "Installing JDK..."
+          sudo yum install -y java-17-amazon-corretto || sudo apt install -y openjdk-17-jdk
+          java -version
+
+          # Install Maven
+          echo "Installing Maven..."
+          sudo yum install -y maven || sudo apt install -y maven
+          mvn -version
+          
+          echo "Maven and JDK installation completed!"
+        EOF
