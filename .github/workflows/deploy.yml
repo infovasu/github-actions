@@ -1,7 +1,7 @@
 name: Test EC2 Connection
 
 on:
-  workflow_dispatch:  # Allows manual execution from GitHub UI
+  workflow_dispatch:  # Allows manual execution from GitHub UI.
 
 jobs:
   test-connection:
