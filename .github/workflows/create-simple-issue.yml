@@ -30,11 +30,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const today = new Date().toISOString().split("T")[0];
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: "Test Issue from GitHub Actions",
-              body: "This is a simple test issue created automatically.",
+              title: `Weekly Report – ${today}`,
+              body: `This is a basic weekly report generated on ${today}.`,
               assignees: ["infovasu"]
             });
 
