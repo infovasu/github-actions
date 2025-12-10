@@ -1,10 +1,6 @@
 name: Weekly Report
 
 on:
-  # Runs automatically every Monday at 9:00 UTC
-  schedule:
-    - cron: "0 9 * * MON"
-  # Allows you to run it manually from the Actions tab
   workflow_dispatch:
 
 permissions:
@@ -52,7 +48,7 @@ jobs:
               : "_None_";
 
             const body = `
-### 📝 Weekly Report (DETAILED) ${startDate} → ${endDate}
+### 📝 Weekly Report (${startDate} → ${endDate})
 
 ---
 
@@ -72,13 +68,13 @@ ${closedList}
 
 ---
 
-_Report generated automatically by GitHub Actions (detailed version)._
+_Report generated automatically by GitHub Actions._
 `;
 
             await github.rest.issues.create({
               owner,
               repo,
-              title: `Weekly Report (DETAILED) – ${endDate}`,
+              title: `Weekly Report – ${endDate}`,
               body,
               assignees: ["infovasu"]
             });
