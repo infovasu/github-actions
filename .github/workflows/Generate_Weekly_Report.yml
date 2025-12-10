@@ -1,0 +1,124 @@
+name: Weekly Report
+
+on:
+  schedule:
+    - cron: "0 9 * * MON"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  weekly_report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Weekly Report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // ----- Date range: last 7 days -----
+            const today = new Date();
+            const endDate = today.toISOString().split("T")[0];
+
+            const lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 7);
+            const startDate = lastWeek.toISOString().split("T")[0];
+
+            // ----- Search issues created/closed -----
+            const created = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue created:${startDate}..${endDate}`
+            });
+
+            const closed = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue closed:${startDate}..${endDate}`
+            });
+
+            // ----- Helper to format issue list with links -----
+            const fmt = (item) => `- [#${item.number}](${item.html_url}) – ${item.title}`;
+
+            // ----- Group created issues by label -----
+            const createdByLabel = {};
+            for (const issue of created.data.items) {
+              const labels = issue.labels.length ? issue.labels.map(l => l.name) : ["no-label"];
+              for (const label of labels) {
+                if (!createdByLabel[label]) createdByLabel[label] = [];
+                createdByLabel[label].push(issue);
+              }
+            }
+
+            // ----- Group created issues by assignee -----
+            const createdByAssignee = {};
+            for (const issue of created.data.items) {
+              const assignee = issue.assignee ? issue.assignee.login : "unassigned";
+              if (!createdByAssignee[assignee]) createdByAssignee[assignee] = [];
+              createdByAssignee[assignee].push(issue);
+            }
+
+            // ----- Build Markdown sections -----
+            let createdLabelSection = "";
+            for (const label in createdByLabel) {
+              createdLabelSection += `\n**${label}**\n`;
+              createdLabelSection += createdByLabel[label].map(fmt).join("\n") + "\n";
+            }
+
+            let createdAssigneeSection = "";
+            for (const user in createdByAssignee) {
+              createdAssigneeSection += `\n**${user}**\n`;
+              createdAssigneeSection += createdByAssignee[user].map(fmt).join("\n") + "\n";
+            }
+
+            const createdList = created.data.items.length
+              ? created.data.items.map(fmt).join("\n")
+              : "_None_";
+
+            const closedList = closed.data.items.length
+              ? closed.data.items.map(fmt).join("\n")
+              : "_None_";
+
+            const body = `
+### 📝 Weekly Report (${startDate} → ${endDate})
+
+---
+
+## 🔹 Summary
+- Issues created: **${created.data.total_count}**
+- Issues closed: **${closed.data.total_count}**
+
+---
+
+## 🔹 Created Issues (List)
+${createdList}
+
+---
+
+## 🔹 Closed Issues
+${closedList}
+
+---
+
+## 🔹 Created Issues — Grouped by Label
+${createdLabelSection}
+
+---
+
+## 🔹 Created Issues — Grouped by Assignee
+${createdAssigneeSection}
+
+---
+
+_Report generated automatically by GitHub Actions._
+`;
+
+            // ----- Create the weekly report issue -----
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: `Weekly Report – ${endDate}`,
+              body,
+              assignees: ["infovasu"]
+            });
