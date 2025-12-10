@@ -1,0 +1,84 @@
+name: Weekly_Report_v5
+
+on:
+  # Runs automatically every Monday at 9:00 UTC
+  schedule:
+    - cron: "0 9 * * MON"
+  # Allows you to run it manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  weekly_report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Weekly Report issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // ----- Date range: last 7 days -----
+            const today = new Date();
+            const endDate = today.toISOString().split("T")[0];
+
+            const lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 7);
+            const startDate = lastWeek.toISOString().split("T")[0];
+
+            // ----- Search issues created/closed -----
+            const created = await github.rest.search.issuesAndPullRequests({
+              q: 'repo:${owner}/${repo} is:issue created:${startDate}..${endDate}'
+            });
+
+            const closed = await github.rest.search.issuesAndPullRequests({
+              q: 'repo:${owner}/${repo} is:issue closed:${startDate}..${endDate}'
+            });
+
+            // Helper to format one issue with a clickable link
+            const fmt = (item) => '- [#${item.number}](${item.html_url}) – ${item.title}';
+
+            const createdList = created.data.items.length
+              ? created.data.items.map(fmt).join("\n")
+              : "_None_";
+
+            const closedList = closed.data.items.length
+              ? closed.data.items.map(fmt).join("\n")
+              : "_None_";
+
+            const body = '
+### 📝 Weekly Report (${startDate} → ${endDate})
+
+---
+
+## 🔹 Summary
+- Issues created: **${created.data.total_count}**
+- Issues closed: **${closed.data.total_count}**
+
+---
+
+## 🔹 Created Issues
+${createdList}
+
+---
+
+## 🔹 Closed Issues
+${closedList}
+
+---
+
+_Report generated automatically by GitHub Actions._
+';
+
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: `Weekly Report – ${endDate}`,
+              body,
+              assignees: ["infovasu"]
+            });
